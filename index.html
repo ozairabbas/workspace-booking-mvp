@@ -2,118 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workspace Booking MVP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      margin: 0;
       font-family: 'Inter', sans-serif;
-      background-color: #f4f6f8;
-      color: #333;
-    }
-    header {
-      background-color: #1a1a2e;
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-    }
-    header p {
-      margin: 0.5rem 0 0;
-      font-size: 1.1rem;
-      color: #ccc;
-    }
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 2rem 1rem;
-    }
-    .intro {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .intro h2 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    .intro p {
-      font-size: 1rem;
-      color: #555;
-    }
-    .listing {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .listing h3 {
-      margin: 0 0 0.5rem;
-      font-size: 1.5rem;
-    }
-    .listing p {
-      color: #666;
-      margin: 0.5rem 0 1rem;
-    }
-    .book-btn {
-      display: inline-block;
-      background-color: #007bff;
-      color: white;
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background-color 0.3s;
-    }
-    .book-btn:hover {
-      background-color: #0056b3;
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      background-color: #1a1a2e;
-      color: #ccc;
-      font-size: 0.9rem;
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Find Your Ideal Workspace</h1>
-    <p>Flexible desk and meeting room bookings across Pakistan</p>
+<body class="bg-gray-50">
+  <!-- Hero Section -->
+  <header class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-8 text-center">
+      <h1 class="text-4xl font-bold text-gray-800">Find Your Ideal Workspace</h1>
+      <p class="mt-2 text-gray-600 text-lg">Flexible desk and meeting room bookings across Pakistan</p>
+      <div class="mt-6 max-w-md mx-auto">
+        <input type="text" placeholder="Search by city or workspace..." class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
   </header>
 
-  <div class="container">
-    <div class="intro">
-      <h2>Discover Affordable Workspaces Near You</h2>
-      <p>We partner with top coworking offices in Lahore, Karachi, and Islamabad to offer on-demand access to desks, rooms, and meeting spaces. No contracts, just simple booking.</p>
-    </div>
+  <!-- Listings Section -->
+  <main class="max-w-7xl mx-auto px-4 py-12">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Available Workspaces</h2>
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 
-    <div class="listing">
-      <h3>Kickstart Coworking – Lahore</h3>
-      <p>Modern coworking space in Gulberg with fast Wi-Fi, meeting rooms, and great coffee. Ideal for freelancers, startups, and remote teams.</p>
-      <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
-    </div>
+      <!-- Listing 1 -->
+      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+        <img src="https://placehold.co/600x400?text=Kickstart+Lahore" alt="Kickstart Lahore" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h3 class="text-xl font-semibold text-gray-800">Kickstart Coworking – Lahore</h3>
+          <p class="text-gray-600 mt-2">Modern coworking space in Gulberg with fast Wi-Fi, meeting rooms, and great coffee. Ideal for freelancers, startups, and remote teams.</p>
+          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
+        </div>
+      </div>
 
-    <div class="listing">
-      <h3>The Hive – Islamabad</h3>
-      <p>Premium workspace in Blue Area with dedicated desks, open seating, and professional meeting facilities. Perfect for focused work or team sessions.</p>
-      <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
-    </div>
+      <!-- Listing 2 -->
+      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+        <img src="https://placehold.co/600x400?text=The+Hive+Islamabad" alt="The Hive Islamabad" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h3 class="text-xl font-semibold text-gray-800">The Hive – Islamabad</h3>
+          <p class="text-gray-600 mt-2">Premium workspace in Blue Area with dedicated desks, open seating, and professional meeting facilities. Perfect for focused work or team sessions.</p>
+          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
+        </div>
+      </div>
 
-    <div class="listing">
-      <h3>WorkHall – Karachi</h3>
-      <p>Flexible desk bookings in Clifton with high-speed internet, comfortable seating, and quiet zones for calls. Great for solo professionals.</p>
-      <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
-    </div>
-  </div>
+      <!-- Listing 3 -->
+      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+        <img src="https://placehold.co/600x400?text=WorkHall+Karachi" alt="WorkHall Karachi" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h3 class="text-xl font-semibold text-gray-800">WorkHall – Karachi</h3>
+          <p class="text-gray-600 mt-2">Flexible desk bookings in Clifton with high-speed internet, comfortable seating, and quiet zones for calls. Great for solo professionals.</p>
+          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
+        </div>
+      </div>
 
-  <footer>
-    &copy; 2025 Workspace Booking MVP. All rights reserved.
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white text-center text-sm text-gray-500 py-6">
+    &copy; 2025 Workspace Booking MVP. Built for professionals in Pakistan.
   </footer>
 </body>
 </html>
