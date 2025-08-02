@@ -4,42 +4,116 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Workspace Booking MVP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; background: #f8f9fa; }
-    header { background: #1e1e2f; color: white; padding: 1rem; text-align: center; }
-    .container { padding: 2rem; max-width: 900px; margin: auto; }
-    .listing { background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .listing h2 { margin-top: 0; }
-    .listing p { color: #555; }
-    .book-btn { display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; border-radius: 4px; text-decoration: none; }
-    .book-btn:hover { background: #0056b3; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+    header {
+      background-color: #1a1a2e;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    header p {
+      margin: 0.5rem 0 0;
+      font-size: 1.1rem;
+      color: #ccc;
+    }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 2rem 1rem;
+    }
+    .intro {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .intro h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .intro p {
+      font-size: 1rem;
+      color: #555;
+    }
+    .listing {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .listing h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+    }
+    .listing p {
+      color: #666;
+      margin: 0.5rem 0 1rem;
+    }
+    .book-btn {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+    .book-btn:hover {
+      background-color: #0056b3;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #1a1a2e;
+      color: #ccc;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Workspace Booking MVP</h1>
-    <p>Browse and book a space manually</p>
+    <h1>Find Your Ideal Workspace</h1>
+    <p>Flexible desk and meeting room bookings across Pakistan</p>
   </header>
+
   <div class="container">
+    <div class="intro">
+      <h2>Discover Affordable Workspaces Near You</h2>
+      <p>We partner with top coworking offices in Lahore, Karachi, and Islamabad to offer on-demand access to desks, rooms, and meeting spaces. No contracts, just simple booking.</p>
+    </div>
 
     <div class="listing">
-      <h2>Kickstart Coworking – Lahore</h2>
-      <p>Modern coworking space in Gulberg with fast Wi-Fi and meeting rooms. Great for freelancers and startups.</p>
+      <h3>Kickstart Coworking – Lahore</h3>
+      <p>Modern coworking space in Gulberg with fast Wi-Fi, meeting rooms, and great coffee. Ideal for freelancers, startups, and remote teams.</p>
       <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
     </div>
 
     <div class="listing">
-      <h2>The Hive – Islamabad</h2>
-      <p>Premium office environment in Blue Area. Includes coffee, desk, and access to a quiet zone.</p>
+      <h3>The Hive – Islamabad</h3>
+      <p>Premium workspace in Blue Area with dedicated desks, open seating, and professional meeting facilities. Perfect for focused work or team sessions.</p>
       <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
     </div>
 
     <div class="listing">
-      <h2>WorkHall – Karachi</h2>
-      <p>Vibrant workspace near Clifton. Book a desk by the day with flexible hours and on-site support.</p>
+      <h3>WorkHall – Karachi</h3>
+      <p>Flexible desk bookings in Clifton with high-speed internet, comfortable seating, and quiet zones for calls. Great for solo professionals.</p>
       <a class="book-btn" href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank">Book Now</a>
     </div>
-
   </div>
+
+  <footer>
+    &copy; 2025 Workspace Booking MVP. All rights reserved.
+  </footer>
 </body>
 </html>
