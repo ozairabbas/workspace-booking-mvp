@@ -1,70 +1,621 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workspace Booking MVP</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
+import React, { useEffect, useMemo, useState } from "react";
+
+// Airbnb-style coworking MVP
+// - Single-file React app
+// - No backend: uses localStorage for listings, favorites, and booking requests
+// - Tailwind CSS for styling
+// - Minimal, clean, responsive UI
+// --------------------------------------------------------------
+
+// --- Utilities -------------------------------------------------
+const PKR = new Intl.NumberFormat("en-PK", { style: "currency", currency: "PKR", maximumFractionDigits: 0 });
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const defaultListings = [
+  {
+    id: "l1",
+    title: "Sunlit Private Desks at Clifton",
+    city: "Karachi",
+    address: "Block 5, Clifton",
+    pricePerSeat: 1800, // per day
+    seats: 12,
+    meetingRooms: 1,
+    amenities: ["Wi‑Fi", "AC", "Power Backup", "Tea/Coffee"],
+    images: [
+      "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1529336953121-adf9a8f4b007?q=80&w=1800&auto=format&fit=crop",
+    ],
+    rating: 4.7,
+    tags: ["Day Pass", "Private Desk"],
+  },
+  {
+    id: "l2",
+    title: "Gulberg Shared Space + Meeting Room",
+    city: "Lahore",
+    address: "Gulberg III",
+    pricePerSeat: 1500,
+    seats: 20,
+    meetingRooms: 2,
+    amenities: ["Wi‑Fi", "AC", "Kitchen", "Parking"],
+    images: [
+      "https://images.unsplash.com/photo-1557800636-894a64c1696f?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1538688423619-a81d3f23454b?q=80&w=1800&auto=format&fit=crop",
+    ],
+    rating: 4.5,
+    tags: ["Day Pass", "Open Plan"],
+  },
+  {
+    id: "l3",
+    title: "F‑7 Boutique Offices",
+    city: "Islamabad",
+    address: "F‑7 Markaz",
+    pricePerSeat: 2200,
+    seats: 8,
+    meetingRooms: 1,
+    amenities: ["Wi‑Fi", "AC", "Quiet Zone", "Whiteboard"],
+    images: [
+      "https://images.unsplash.com/photo-1524758631624-97136a1732a0?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1800&auto=format&fit=crop",
+    ],
+    rating: 4.9,
+    tags: ["Private Room", "Monthly"],
+  },
+  {
+    id: "l4",
+    title: "DHA Phase 6 Creative Loft",
+    city: "Karachi",
+    address: "DHA Phase 6",
+    pricePerSeat: 1300,
+    seats: 30,
+    meetingRooms: 3,
+    amenities: ["Wi‑Fi", "AC", "Power Backup", "Projector"],
+    images: [
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1800&auto=format&fit=crop",
+    ],
+    rating: 4.3,
+    tags: ["Event Friendly", "Open Plan"],
+  },
+];
+
+const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const load = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+// --- Components -----------------------------------------------
+const Badge = ({ children }) => (
+  <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-gray-700 border-gray-200 bg-white">
+    {children}
+  </span>
+);
+
+const Pill = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`rounded-full px-3 py-1 text-sm border transition ${
+      active ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+    }`}
+  >
+    {children}
+  </button>
+);
+
+const Header = ({ onAddListing }) => {
+  return (
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-black text-white grid place-items-center font-bold">CW</div>
+            <span className="text-xl font-semibold">Coworking Finder</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+            <a className="px-3 py-2 rounded-lg hover:bg-gray-50" href="#explore">Explore</a>
+            <a className="px-3 py-2 rounded-lg hover:bg-gray-50" href="#host">List your space</a>
+            <a className="px-3 py-2 rounded-lg hover:bg-gray-50" href="#bookings">Bookings</a>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={onAddListing} className="hidden sm:inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">
+              <span className="i-lucide-plus" /> Add Listing
+            </button>
+            <button className="rounded-full h-9 w-9 grid place-items-center border hover:bg-gray-50" aria-label="profile">
+              <span className="i-lucide-user" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const SearchBar = ({ filters, setFilters }) => {
+  const [q, setQ] = useState(filters.q || "");
+  const [city, setCity] = useState(filters.city || "");
+  const [min, setMin] = useState(filters.min || 0);
+  const [max, setMax] = useState(filters.max || 3000);
+  const [seats, setSeats] = useState(filters.seats || 1);
+
+  const apply = () => setFilters({ ...filters, q, city, min, max, seats });
+
+  useEffect(() => {
+    const t = setTimeout(apply, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line
+  }, [q, city, min, max, seats]);
+
+  const tagActive = (tag) => (filters.tags || []).includes(tag);
+  const toggleTag = (tag) => {
+    const next = new Set(filters.tags || []);
+    next.has(tag) ? next.delete(tag) : next.add(tag);
+    setFilters({ ...filters, tags: Array.from(next) });
+  };
+
+  return (
+    <section className="border-b bg-white/60 backdrop-blur">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="grid md:grid-cols-12 gap-3">
+          <div className="md:col-span-4 flex items-center gap-2 border rounded-2xl px-3 py-2 bg-white">
+            <span className="text-gray-500">Where</span>
+            <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Karachi, Lahore, Islamabad" className="flex-1 outline-none" />
+          </div>
+          <div className="md:col-span-4 flex items-center gap-2 border rounded-2xl px-3 py-2 bg-white">
+            <span className="text-gray-500">Search</span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Desk, meeting room, projector…" className="flex-1 outline-none" />
+          </div>
+          <div className="md:col-span-3 grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 border rounded-2xl px-3 py-2 bg-white">
+              <span className="text-gray-500">Min</span>
+              <input type="number" value={min} onChange={(e) => setMin(Number(e.target.value))} className="w-full outline-none" />
+            </div>
+            <div className="flex items-center gap-2 border rounded-2xl px-3 py-2 bg-white">
+              <span className="text-gray-500">Max</span>
+              <input type="number" value={max} onChange={(e) => setMax(Number(e.target.value))} className="w-full outline-none" />
+            </div>
+          </div>
+          <div className="md:col-span-1 flex items-center gap-2 border rounded-2xl px-3 py-2 bg-white">
+            <span className="text-gray-500">Seats</span>
+            <input type="number" min={1} value={seats} onChange={(e) => setSeats(Number(e.target.value))} className="w-full outline-none" />
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            "Day Pass",
+            "Private Desk",
+            "Open Plan",
+            "Private Room",
+            "Monthly",
+            "Event Friendly",
+          ].map((t) => (
+            <Pill key={t} active={tagActive(t)} onClick={() => toggleTag(t)}>
+              {t}
+            </Pill>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ListingCard = ({ item, onBook, onToggleFav, fav }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setImgIdx((i) => (i + 1) % item.images.length), 4000);
+    return () => clearInterval(id);
+  }, [item.images.length]);
+
+  return (
+    <div className="group border rounded-3xl overflow-hidden hover:shadow-md transition bg-white">
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img src={item.images[imgIdx]} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition" />
+        <button
+          onClick={onToggleFav}
+          className={`absolute top-3 right-3 h-9 w-9 rounded-full grid place-items-center bg-white/90 border ${
+            fav ? "text-red-500" : "text-gray-700"
+          }`}
+          title={fav ? "Remove from saved" : "Save"}
+        >
+          {fav ? "❤" : "♡"}
+        </button>
+        <div className="absolute bottom-3 left-3 flex gap-2">
+          {item.tags.slice(0, 2).map((t) => (
+            <Badge key={t}>{t}</Badge>
+          ))}
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-900 line-clamp-1">{item.title}</h3>
+          <span className="text-sm">⭐ {item.rating}</span>
+        </div>
+        <p className="text-sm text-gray-600 line-clamp-1">{item.address}, {item.city}</p>
+        <div className="mt-2 flex items-center justify-between">
+          <div>
+            <div className="font-semibold">{PKR.format(item.pricePerSeat)} <span className="font-normal text-gray-500 text-sm">/ seat / day</span></div>
+            <div className="text-xs text-gray-500">{item.seats} seats • {item.meetingRooms} meeting room{item.meetingRooms>1?"s":""}</div>
+          </div>
+          <button onClick={onBook} className="rounded-xl border px-3 py-2 text-sm hover:bg-gray-50">Book</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BookingModal = ({ open, onClose, listing, onSubmit }) => {
+  const [date, setDate] = useState("");
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setDate("");
+      setQty(1);
+      setNotes("");
     }
-  </style>
-</head>
-<body class="bg-gray-50">
-  <!-- Hero Section -->
-  <header class="bg-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-8 text-center">
-      <h1 class="text-4xl font-bold text-gray-800">Find Your Ideal Workspace</h1>
-      <p class="mt-2 text-gray-600 text-lg">Flexible desk and meeting room bookings across Pakistan</p>
-      <div class="mt-6 max-w-md mx-auto">
-        <input type="text" placeholder="Search by city or workspace..." class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+  }, [open]);
+
+  if (!open || !listing) return null;
+
+  const total = listing.pricePerSeat * Math.max(1, qty);
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-xl overflow-hidden">
+        <div className="p-5 border-b flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Request Booking</h3>
+          <button onClick={onClose} className="rounded-full h-9 w-9 grid place-items-center hover:bg-gray-50">✕</button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex items-center gap-3">
+            <img src={listing.images[0]} alt="" className="h-16 w-16 object-cover rounded-xl border" />
+            <div>
+              <div className="font-medium">{listing.title}</div>
+              <div className="text-sm text-gray-600">{listing.address}, {listing.city}</div>
+            </div>
+          </div>
+          <label className="block">
+            <span className="text-sm text-gray-600">Date</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">Seats</span>
+            <input type="number" min={1} max={listing.seats} value={qty} onChange={(e) => setQty(Number(e.target.value))} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">Notes (optional)</span>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1 w-full border rounded-xl px-3 py-2" placeholder="Timing, special requests, company name…" />
+          </label>
+          <div className="flex items-center justify-between border rounded-2xl p-3">
+            <div>
+              <div className="text-sm text-gray-600">Estimated total</div>
+              <div className="text-xl font-semibold">{PKR.format(total)}</div>
+            </div>
+            <button
+              onClick={() => onSubmit({ date, qty, notes })}
+              className="rounded-2xl bg-black text-white px-4 py-3 hover:opacity-90"
+            >
+              Send Request
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </header>
+  );
+};
 
-  <!-- Listings Section -->
-  <main class="max-w-7xl mx-auto px-4 py-12">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Available Workspaces</h2>
-    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+const SavedToast = ({ message, onClose }) => (
+  <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+    <div className="rounded-2xl border bg-white shadow px-4 py-2 text-sm">{message}</div>
+    <button onClick={onClose} className="sr-only">Close</button>
+  </div>
+);
 
-      <!-- Listing 1 -->
-      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-        <img src="https://placehold.co/600x400?text=Kickstart+Lahore" alt="Kickstart Lahore" class="w-full h-48 object-cover">
-        <div class="p-6">
-          <h3 class="text-xl font-semibold text-gray-800">Kickstart Coworking – Lahore</h3>
-          <p class="text-gray-600 mt-2">Modern coworking space in Gulberg with fast Wi-Fi, meeting rooms, and great coffee. Ideal for freelancers, startups, and remote teams.</p>
-          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
+const EmptyState = ({ title, subtitle, action, onAction }) => (
+  <div className="text-center border rounded-3xl p-10 bg-white">
+    <div className="text-5xl mb-2">🔍</div>
+    <h3 className="text-lg font-semibold">{title}</h3>
+    <p className="text-gray-600">{subtitle}</p>
+    {action && (
+      <button onClick={onAction} className="mt-4 rounded-xl border px-4 py-2 hover:bg-gray-50">{action}</button>
+    )}
+  </div>
+);
+
+const Footer = () => (
+  <footer className="border-t mt-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p>© {new Date().getFullYear()} Coworking Finder — Made for MVP demo. No payment collected.</p>
+        <div className="flex gap-4">
+          <a className="hover:underline" href="#">Terms</a>
+          <a className="hover:underline" href="#">Privacy</a>
+          <a className="hover:underline" href="#">Contact</a>
         </div>
       </div>
-
-      <!-- Listing 2 -->
-      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-        <img src="https://placehold.co/600x400?text=The+Hive+Islamabad" alt="The Hive Islamabad" class="w-full h-48 object-cover">
-        <div class="p-6">
-          <h3 class="text-xl font-semibold text-gray-800">The Hive – Islamabad</h3>
-          <p class="text-gray-600 mt-2">Premium workspace in Blue Area with dedicated desks, open seating, and professional meeting facilities. Perfect for focused work or team sessions.</p>
-          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
-        </div>
-      </div>
-
-      <!-- Listing 3 -->
-      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-        <img src="https://placehold.co/600x400?text=WorkHall+Karachi" alt="WorkHall Karachi" class="w-full h-48 object-cover">
-        <div class="p-6">
-          <h3 class="text-xl font-semibold text-gray-800">WorkHall – Karachi</h3>
-          <p class="text-gray-600 mt-2">Flexible desk bookings in Clifton with high-speed internet, comfortable seating, and quiet zones for calls. Great for solo professionals.</p>
-          <a href="https://forms.gle/YOUR_FORM_LINK_HERE" target="_blank" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
-        </div>
-      </div>
-
     </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-white text-center text-sm text-gray-500 py-6">
-    &copy; 2025 Workspace Booking MVP. Built for professionals in Pakistan.
   </footer>
-</body>
-</html>
+);
+
+// --- Main App --------------------------------------------------
+export default function App() {
+  const [listings, setListings] = useState(() => load("cw:listings", defaultListings));
+  const [filters, setFilters] = useState({ min: 0, max: 3000, seats: 1, tags: [] });
+  const [favorites, setFavorites] = useState(() => new Set(load("cw:favs", [])));
+  const [bookingFor, setBookingFor] = useState(null);
+  const [toast, setToast] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+
+  useEffect(() => save("cw:listings", listings), [listings]);
+  useEffect(() => save("cw:favs", Array.from(favorites)), [favorites]);
+
+  const filtered = useMemo(() => {
+    return listings.filter((l) => {
+      if (filters.city && !`${l.city}`.toLowerCase().includes(filters.city.toLowerCase())) return false;
+      if (filters.q) {
+        const hay = `${l.title} ${l.address} ${l.city} ${l.amenities.join(" ")} ${l.tags.join(" ")}`.toLowerCase();
+        if (!hay.includes(filters.q.toLowerCase())) return false;
+      }
+      if (l.pricePerSeat < (filters.min ?? 0) || l.pricePerSeat > (filters.max ?? 999999)) return false;
+      if (l.seats < (filters.seats ?? 1)) return false;
+      if (filters.tags?.length) {
+        const hasAll = filters.tags.every((t) => l.tags.includes(t));
+        if (!hasAll) return false;
+      }
+      return true;
+    });
+  }, [listings, filters]);
+
+  const toggleFav = (id) => {
+    const next = new Set(favorites);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setFavorites(next);
+    setToast(next.has(id) ? "Saved to your list" : "Removed from saved");
+    setTimeout(() => setToast(""), 1500);
+  };
+
+  const submitBooking = ({ date, qty, notes }) => {
+    if (!date) {
+      setToast("Please select a date");
+      setTimeout(() => setToast(""), 1500);
+      return;
+    }
+    const booking = {
+      id: uid(),
+      listingId: bookingFor.id,
+      date,
+      qty: Math.max(1, qty),
+      notes,
+      createdAt: new Date().toISOString(),
+      status: "Requested",
+    };
+    const all = load("cw:bookings", []);
+    all.push(booking);
+    save("cw:bookings", all);
+    setBookingFor(null);
+    setToast("Booking request sent. We'll confirm by email/phone.");
+    setTimeout(() => setToast(""), 2000);
+  };
+
+  const addListing = (payload) => {
+    const entry = { ...payload, id: uid(), images: payload.images?.length ? payload.images : ["https://picsum.photos/seed/desk/1200/900"], rating: 4.5 };
+    setListings([entry, ...listings]);
+    setShowAdd(false);
+    setToast("Listing added");
+    setTimeout(() => setToast(""), 1500);
+  };
+
+  const bookings = load("cw:bookings", []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <Header onAddListing={() => setShowAdd(true)} />
+      <SearchBar filters={filters} setFilters={setFilters} />
+
+      {/* Explore */}
+      <main id="explore" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {filtered.length ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((l) => (
+              <ListingCard
+                key={l.id}
+                item={l}
+                fav={favorites.has(l.id)}
+                onToggleFav={() => toggleFav(l.id)}
+                onBook={() => setBookingFor(l)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No spaces match your filters"
+            subtitle="Try widening your price range or clearing some tags."
+            action="Reset filters"
+            onAction={() => setFilters({ min: 0, max: 3000, seats: 1, tags: [], q: "", city: "" })}
+          />
+        )}
+
+        {/* Saved */}
+        <section className="mt-10">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Your saved spaces</h2>
+            <a href="#bookings" className="text-sm underline">View bookings</a>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from(favorites).map((fid) => listings.find((l) => l.id === fid)).filter(Boolean).map((l) => (
+              <ListingCard
+                key={l.id}
+                item={l}
+                fav={true}
+                onToggleFav={() => toggleFav(l.id)}
+                onBook={() => setBookingFor(l)}
+              />
+            ))}
+            {!favorites.size && (
+              <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
+                <EmptyState title="Nothing saved yet" subtitle="Tap the ♥ on any listing to save it for later." />
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Bookings */}
+        <section id="bookings" className="mt-10">
+          <h2 className="text-lg font-semibold mb-3">Booking requests</h2>
+          {bookings.length ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {bookings.slice().reverse().map((b) => {
+                const l = listings.find((x) => x.id === b.listingId);
+                if (!l) return null;
+                return (
+                  <div key={b.id} className="rounded-3xl border bg-white p-4 flex items-center gap-4">
+                    <img src={l.images[0]} alt="" className="h-20 w-28 object-cover rounded-2xl border" />
+                    <div className="flex-1">
+                      <div className="font-medium">{l.title}</div>
+                      <div className="text-sm text-gray-600">{b.date} • {b.qty} seat{b.qty>1?"s":""}</div>
+                      <div className="text-xs text-gray-500">Status: {b.status}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">{PKR.format(l.pricePerSeat * b.qty)}</div>
+                      <button
+                        className="mt-2 text-sm rounded-xl border px-3 py-1.5 hover:bg-gray-50"
+                        onClick={() => {
+                          const rest = load("cw:bookings", []).filter((x) => x.id !== b.id);
+                          save("cw:bookings", rest);
+                          setToast("Booking cancelled");
+                          setTimeout(() => setToast(""), 1200);
+                          // trigger re-render
+                          window.dispatchEvent(new Event("storage"));
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState title="No booking requests yet" subtitle="Send a booking request to get started." />
+          )}
+        </section>
+
+        {/* Host CTA */}
+        <section id="host" className="mt-12">
+          <div className="rounded-3xl border bg-gradient-to-br from-white to-gray-50 p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1">
+              <h3 className="text-2xl font-semibold">Have unutilized office space?</h3>
+              <p className="text-gray-600 mt-1">Earn by listing your empty desks or rooms. Set your own price and availability.</p>
+            </div>
+            <button onClick={() => setShowAdd(true)} className="rounded-2xl bg-black text-white px-5 py-3 hover:opacity-90">List your space</button>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+
+      {/* Booking modal */}
+      <BookingModal
+        open={!!bookingFor}
+        onClose={() => setBookingFor(null)}
+        listing={bookingFor}
+        onSubmit={submitBooking}
+      />
+
+      {/* Add listing modal */}
+      {showAdd && (
+        <AddListingModal onClose={() => setShowAdd(false)} onSubmit={addListing} />
+      )}
+
+      {/* Toast */}
+      {!!toast && <SavedToast message={toast} onClose={() => setToast("")} />}
+    </div>
+  );
+}
+
+function AddListingModal({ onClose, onSubmit }) {
+  const [title, setTitle] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [pricePerSeat, setPricePerSeat] = useState(1500);
+  const [seats, setSeats] = useState(10);
+  const [meetingRooms, setMeetingRooms] = useState(1);
+  const [amenities, setAmenities] = useState("Wi‑Fi, AC");
+  const [images, setImages] = useState("");
+
+  const parseImages = () => images.split(/\s*,\s*/).filter(Boolean);
+
+  const submit = () => {
+    if (!title || !city || !address) return;
+    onSubmit({ title, city, address, pricePerSeat: Number(pricePerSeat), seats: Number(seats), meetingRooms: Number(meetingRooms), amenities: amenities.split(/\s*,\s*/), images: parseImages(), tags: ["Day Pass"] });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
+      <div className="w-full max-w-2xl rounded-3xl bg-white overflow-hidden shadow-xl">
+        <div className="p-5 border-b flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Add a new listing</h3>
+          <button onClick={onClose} className="rounded-full h-9 w-9 grid place-items-center hover:bg-gray-50">✕</button>
+        </div>
+        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="block">
+            <span className="text-sm text-gray-600">Title</span>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">City</span>
+            <input value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="text-sm text-gray-600">Address</span>
+            <input value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">Price per seat (PKR/day)</span>
+            <input type="number" value={pricePerSeat} onChange={(e) => setPricePerSeat(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">Seats</span>
+            <input type="number" value={seats} onChange={(e) => setSeats(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block">
+            <span className="text-sm text-gray-600">Meeting rooms</span>
+            <input type="number" value={meetingRooms} onChange={(e) => setMeetingRooms(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="text-sm text-gray-600">Amenities (comma separated)</span>
+            <input value={amenities} onChange={(e) => setAmenities(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="text-sm text-gray-600">Image URLs (comma separated)</span>
+            <input value={images} onChange={(e) => setImages(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" placeholder="https://… , https://…" />
+          </label>
+        </div>
+        <div className="p-5 border-t flex items-center justify-end gap-3">
+          <button onClick={onClose} className="rounded-xl border px-4 py-2 hover:bg-gray-50">Cancel</button>
+          <button onClick={submit} className="rounded-2xl bg-black text-white px-5 py-2.5 hover:opacity-90">Save listing</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Tailwind icon shim (for preview-only): uses emoji or text if lucide not available
+// You can remove if you load lucide-react.
+const IconShim = () => (
+  <style>{`
+    .i-lucide-plus::before { content: '+'; }
+    .i-lucide-user::before { content: '🙂'; }
+  `}</style>
+);
+
+// Inject icon shim into document head (safe for preview)
+if (typeof document !== 'undefined') {
+  const el = document.createElement('div');
+  el.innerHTML = '<style>.i-lucide-plus::before{content:"+"}.i-lucide-user::before{content:"🙂"}</style>';
+  document.head.appendChild(el.firstChild);
+}
